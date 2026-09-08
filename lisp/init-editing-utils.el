@@ -3,6 +3,7 @@
 ;;; Code:
 
 (require-package 'unfill)
+(require-package 'visual-regexp)
 
 (when (fboundp 'electric-pair-mode)
   (add-hook 'after-init-hook 'electric-pair-mode))
@@ -14,24 +15,34 @@
 ;;; Some basic preferences
 
 (setq-default
+ auto-save-default nil
+ bidi-display-reordering 'left-to-right
+ bidi-paragraph-direction 'left-to-right
+ bidi-inhibit-bpa t
  blink-cursor-interval 0.4
+ blink-matching-paren-highlight-offscreen t
  bookmark-default-file (locate-user-emacs-file ".bookmarks.el")
  buffers-menu-max-size 30
  case-fold-search t
  column-number-mode t
  ediff-split-window-function 'split-window-horizontally
  ediff-window-setup-function 'ediff-setup-windows-plain
+ epg-pinentry-mode 'loopback
  indent-tabs-mode nil
  create-lockfiles nil
- auto-save-default nil
  make-backup-files nil
  mouse-yank-at-point t
  save-interprogram-paste-before-kill t
  scroll-preserve-screen-position 'always
  set-mark-command-repeat-pop t
+ show-paren-context-when-offscreen 'child-frame
  tooltip-delay 1.5
  truncate-lines nil
  truncate-partial-width-windows nil)
+
+;; FIX ZWJ emoji in terminal
+(when (not (display-graphic-p))
+  (global-auto-composition-mode -1))
 
 (add-hook 'after-init-hook 'delete-selection-mode)
 
@@ -64,18 +75,6 @@
 ;;; A simple visible bell which works in all terminal types
 (require-package 'mode-line-bell)
 (add-hook 'after-init-hook 'mode-line-bell-mode)
-
-
-
-;;; Newline behaviour (see also electric-indent-mode, enabled above)
-
-(defun sanityinc/newline-at-end-of-line ()
-  "Move to end of line, enter a newline, and reindent."
-  (interactive)
-  (move-end-of-line 1)
-  (newline-and-indent))
-
-(global-set-key (kbd "S-<return>") 'sanityinc/newline-at-end-of-line)
 
 
 
@@ -113,10 +112,6 @@
     (define-key symbol-overlay-mode-map (kbd "M-n") 'symbol-overlay-jump-next)
     (define-key symbol-overlay-mode-map (kbd "M-p") 'symbol-overlay-jump-prev)))
 
-
-;;; Zap *up* to char is a handy pair for zap-to-char
-(global-set-key (kbd "M-Z") 'zap-up-to-char)
-
 
 
 (require-package 'browse-kill-ring)
@@ -151,31 +146,19 @@
 (with-eval-after-load 'help
   (define-key help-map "A" 'describe-face))
 
-(global-set-key (kbd "C-.") 'set-mark-command)
-(global-set-key (kbd "C-x C-.") 'pop-global-mark)
-
-(when (maybe-require-package 'avy)
-  (global-set-key (kbd "C-;") 'avy-goto-char-timer))
-
-(require-package 'multiple-cursors)
-;; multiple-cursors
-(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
-(global-set-key (kbd "C->") 'mc/mark-next-like-this)
-(global-set-key (kbd "C-+") 'mc/mark-next-like-this)
-(global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
-
-;; Train myself to use M-f and M-b instead
-(global-unset-key [M-left])
-(global-unset-key [M-right])
-
-(defun kill-back-to-indentation ()
-  "Kill from point back to the first non-whitespace character on the line."
-  (interactive)
-  (let ((prev-pos (point)))
-    (back-to-indentation)
-    (kill-region (point) prev-pos)))
-
-(global-set-key (kbd "C-M-<backspace>") 'kill-back-to-indentation)
+(when (and (maybe-require-package 'avy)
+           (maybe-require-package 'ace-pinyin))
+  (ace-pinyin-global-mode 1)
+  (defun my/avy-goto-char-timer (&optional arg)
+    (interactive "P")
+    (let ((avy-all-windows (if arg
+                               (not avy-all-windows)
+                             avy-all-windows)))
+      (avy-with avy-goto-char-timer
+        (setq avy--old-cands (avy--read-candidates
+                              'pinyinlib-build-regexp-string))
+        (avy-process avy--old-cands))))
+  (global-set-key (kbd "C-;") 'my/avy-goto-char-timer))
 
 
 
@@ -185,19 +168,6 @@
   (add-hook 'after-init-hook 'global-page-break-lines-mode)
   (with-eval-after-load 'page-break-lines
     (diminish 'page-break-lines-mode)))
-
-
-
-;; Shift lines up and down with M-up and M-down. When paredit is enabled,
-;; it will use those keybindings. For this reason, you might prefer to
-;; use M-S-up and M-S-down, which will work even in lisp modes.
-
-(require-package 'move-dup)
-(global-set-key [M-S-up] 'move-dup-move-lines-up)
-(global-set-key [M-S-down] 'move-dup-move-lines-down)
-
-(global-set-key (kbd "C-c d") 'move-dup-duplicate-down)
-(global-set-key (kbd "C-c u") 'move-dup-duplicate-up)
 
 
 ;;; Fix backward-up-list to understand quotes, see http://bit.ly/h7mdIL
@@ -213,18 +183,6 @@
 
 (global-set-key [remap backward-up-list] 'sanityinc/backward-up-sexp) ; C-M-u, C-M-up
 
-
-
-;;; Cut/copy the current line if no region is active
-(require-package 'whole-line-or-region)
-(add-hook 'after-init-hook 'whole-line-or-region-global-mode)
-(with-eval-after-load 'whole-line-or-region
-  (diminish 'whole-line-or-region-local-mode))
-
-
-
-;; M-^ is inconvenient, so also bind M-j
-(global-set-key (kbd "M-j") 'join-line)
 
 
 ;; Random line sorting
@@ -267,6 +225,105 @@ ORIG is the advised function, which is called with its ARGS."
 (when (maybe-require-package 'expreg)
   (global-set-key (kbd "C-=") 'expreg-expand)
   (global-set-key (kbd "C--") 'expreg-contract))
+
+;; {{ auto save set up
+(defvar my-auto-save-exclude-major-mode-list
+  '(message-mode)
+  "The major modes where auto-save is disabled.")
+
+(setq auto-save-visited-interval 2)
+
+(defun my-auto-save-visited-predicate ()
+  "Predicate to control which buffers are auto-saved."
+  (let* ((file-size (nth 7 (file-attributes (buffer-file-name))))
+         (file-is-big (and file-size (> file-size (* 5000 64))))
+         (not-save (or (not (buffer-file-name))
+                       (file-remote-p (buffer-file-name))
+                       file-is-big
+                       (eq (buffer-base-buffer (get-buffer (concat "CAPTURE-" (buffer-name))))
+                           (current-buffer))
+                       (not (file-writable-p (buffer-file-name)))
+                       (memq major-mode my-auto-save-exclude-major-mode-list))))
+    (not not-save)))
+
+(defun my-auto-save-visited-mode-setup ()
+  "Auto save setup."
+  ;; turn off `auto-save-visited-mode' in certain scenarios
+  (when (my-auto-save-visited-predicate)
+    (setq-local auto-save-visited-mode nil)))
+
+(setq auto-save-visited-predicate #'my-auto-save-visited-predicate)
+(auto-save-visited-mode)
+;; }}
+
+
+
+;; {{ narrow region
+(defun narrow-to-region-indirect-buffer-maybe (start end use-indirect-buffer)
+  "Indirect buffer could multiple widen on same file."
+  (if (region-active-p) (deactivate-mark))
+  (if use-indirect-buffer
+      (with-current-buffer (clone-indirect-buffer
+                            (generate-new-buffer-name
+                             (format "%s-indirect-:%s-:%s"
+                                     (buffer-name)
+                                     (line-number-at-pos start)
+                                     (line-number-at-pos end)))
+                            'display)
+        (narrow-to-region start end)
+        (goto-char (point-min)))
+    (narrow-to-region start end)))
+
+;; @see https://gist.github.com/mwfogleman/95cc60c87a9323876c6c
+;; fixed to behave correctly in org-src buffers; taken from:
+;; https://lists.gnu.org/archive/html/emacs-orgmode/2019-09/msg00094.html
+(defun my-narrow-or-widen-dwim (&optional use-indirect-buffer)
+  "If the buffer is narrowed, it widens.
+Otherwise, it narrows to region or Org subtree.
+If USE-INDIRECT-BUFFER is t, use `indirect-buffer' to hold widen content."
+  (interactive "P")
+  (cond
+   ((and (not use-indirect-buffer) (buffer-narrowed-p))
+    (widen))
+
+   ((and (not use-indirect-buffer)
+         (eq major-mode 'org-mode)
+         (fboundp 'org-src-edit-buffer-p)
+         (org-src-edit-buffer-p))
+    (org-edit-src-exit))
+
+   ;; narrow to region
+   ((region-active-p)
+    (narrow-to-region-indirect-buffer-maybe (region-beginning)
+                                            (region-end)
+                                            use-indirect-buffer))
+
+   ;; narrow to specific org element
+   ((derived-mode-p 'org-mode)
+    (cond
+     ((ignore-errors (org-edit-src-code)) t)
+     ((ignore-errors (org-narrow-to-block) t))
+     ((ignore-errors (org-narrow-to-element) t))
+     (t (org-narrow-to-subtree))))
+
+   ((derived-mode-p 'diff-mode)
+    (let* (b e)
+      (save-excursion
+        ;; If the (point) is already beginning or end of file diff,
+        ;; the `diff-beginning-of-file' and `diff-end-of-file' return nil
+        (setq b (progn (diff-beginning-of-file) (point)))
+        (setq e (progn (diff-end-of-file) (point))))
+      (when (and b e (< b e))
+        (narrow-to-region-indirect-buffer-maybe b e use-indirect-buffer))))
+
+   ((derived-mode-p 'prog-mode)
+    (mark-defun)
+    (narrow-to-region-indirect-buffer-maybe (region-beginning)
+                                            (region-end)
+                                            use-indirect-buffer))
+   (t (error "Please select a region to narrow to"))))
+
+;; }}
 
 (provide 'init-editing-utils)
 ;;; init-editing-utils.el ends here

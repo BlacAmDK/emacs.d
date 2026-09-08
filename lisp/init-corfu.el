@@ -9,9 +9,15 @@
 (when (maybe-require-package 'orderless)
   (with-eval-after-load 'vertico
     (require 'orderless)
-    (setq completion-styles '(orderless basic))))
+    (require 'pinyinlib)
+    (setq completion-styles '(orderless basic))
+    (defun completion--regex-pinyin (str)
+      (orderless-regexp (pinyinlib-build-regexp-string str)))
+    (add-to-list 'orderless-matching-styles 'completion--regex-pinyin)
+    (add-to-list 'orderless-matching-styles 'orderless-initialism)))
 (setq completion-category-defaults nil
-      completion-category-overrides nil)
+      completion-category-overrides nil
+      completion-pcm-leading-wildcard t)
 (setq completion-cycle-threshold 4)
 
 (when (and (version< "28.1" emacs-version) (maybe-require-package 'corfu))

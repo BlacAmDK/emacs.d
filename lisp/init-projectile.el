@@ -5,9 +5,6 @@
 (when (maybe-require-package 'projectile)
   (add-hook 'after-init-hook 'projectile-mode)
 
-  ;; Shorter modeline
-  (setq-default projectile-mode-line-prefix " Proj")
-
   (when (executable-find "rg")
     (setq-default projectile-generic-command "rg --files --hidden -0"))
 

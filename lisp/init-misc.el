@@ -48,9 +48,23 @@
 
 (with-eval-after-load 're-builder
   ;; Support a slightly more idiomatic quit binding in re-builder
-  (define-key reb-mode-map (kbd "C-c C-k") 'reb-quit))
+  (define-key reb-mode-map (kbd "C-c C-k") 'reb-quit)
+  (setq reb-re-syntax 'string))
 
 (add-auto-mode 'conf-mode "^Procfile\\'")
+
+(setopt webjump-sites
+        '(("MetaArray" .
+           "ma.sdf.org")
+          ("Translate" .
+           "www.deepl.com/zh/translator")
+          ("Bing" .
+           [simple-query "cn.bing.com" "cn.bing.com?q=" ""])))
+
+;; (require-package 'tramp-rpc) ;; When Nongnu elpa have this package
+
+
+
 
 
 (provide 'init-misc)

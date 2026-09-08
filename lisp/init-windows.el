@@ -18,6 +18,14 @@
 (setq-default switch-window-timeout nil)
 (global-set-key (kbd "C-x o") 'switch-window)
 
+(global-set-key (kbd "M-h") 'windmove-left)
+(global-set-key (kbd "M-j") 'windmove-down)
+(global-set-key (kbd "M-k") 'windmove-up)
+(global-set-key (kbd "M-l") 'windmove-right)
+(global-set-key (kbd "M-H") 'windswap-left)
+(global-set-key (kbd "M-J") 'windswap-down)
+(global-set-key (kbd "M-K") 'windswap-up)
+(global-set-key (kbd "M-L") 'windswap-right)
 
 
 ;; When splitting window, show (other-buffer) in the new window

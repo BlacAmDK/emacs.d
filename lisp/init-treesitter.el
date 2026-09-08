@@ -69,8 +69,12 @@ Return a list of languages seen along the way."
 
 
 ;; Default
-(setq treesit-font-lock-level 4)
+(autoload 'markdown-ts-mode "markdown-ts-mode" nil t)
+(with-eval-after-load 'markdown-ts-mode
+  (require 'markdown-ts-mode-x))
 
+(setq treesit-font-lock-level 4)
+(setq treesit-enabled-modes t)
 
 
 (provide 'init-treesitter)

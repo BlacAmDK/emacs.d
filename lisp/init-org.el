@@ -49,6 +49,9 @@
       org-fast-tag-selection-single-key 'expert
       org-html-validation-link nil
       org-export-kill-product-buffer-when-displayed t
+      org-yank-image-save-method "./images"
+      org-default-notes-file "~/org/notes.org"
+      org-agenda-files '("~/org/notes.org" "~/org/gtd")
       org-tags-column 80)
 
 
@@ -113,6 +116,8 @@ typical word processor."
 (setq org-capture-templates
       `(("t" "todo" entry (file "")  ; "" => `org-default-notes-file'
          "* NEXT %?\n%U\n" :clock-resume t)
+        ("d" "done" entry (file "")
+         "* DONE %?\nCLOSED: %U\n")
         ("n" "note" entry (file "")
          "* %? :NOTE:\n%U\n%a\n" :clock-resume t)
         ))
@@ -355,8 +360,8 @@ typical word processor."
 
 (with-eval-after-load 'org
   (define-key org-mode-map (kbd "C-M-<up>") 'org-up-element)
+  (define-key org-mode-map (kbd "M-h") nil)
   (when *is-a-mac*
-    (define-key org-mode-map (kbd "M-h") nil)
     (define-key org-mode-map (kbd "C-c g") 'grab-mac-link)))
 
 (with-eval-after-load 'org
@@ -384,6 +389,9 @@ typical word processor."
       (sql . t)
       (sqlite . t)))))
 
+(maybe-require-package 'ox-pandoc)
+(with-eval-after-load 'ox
+  (require 'ox-pandoc))
 
 (provide 'init-org)
 ;;; init-org.el ends here

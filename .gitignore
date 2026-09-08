@@ -43,6 +43,8 @@ site-lisp/package/
 /recentf
 /viper
 /projectile-bookmarks.eld
+/projectile-frecency.eld
+/ielm-history.eld
 /anaconda-mode/
 /.historian
 /.uptimes.el
@@ -58,3 +60,4 @@ site-lisp/package/
 /projects
 /forge-*.sqlite
 /projectile.cache
+/undo-fu-session

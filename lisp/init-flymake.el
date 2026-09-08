@@ -24,7 +24,8 @@
   (define-key flymake-mode-map (kbd "C-c ! p") 'flymake-goto-prev-error)
   (define-key flymake-mode-map (kbd "C-c ! c") 'flymake-start))
 
-(unless (version< emacs-version "28.1")
+(unless (version< emacs-version "30")
+  (setq flymake-show-diagnostics-at-end-of-line t)
   (setq eldoc-documentation-function 'eldoc-documentation-compose)
 
   (add-hook 'flymake-mode-hook

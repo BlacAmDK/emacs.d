@@ -28,7 +28,7 @@
 
 ;; Process performance tuning
 
-(setq read-process-output-max (* 4 1024 1024))
+(setq read-process-output-max (* 1 1024 1024))
 (setq process-adaptive-read-buffering nil)
 
 
@@ -61,8 +61,10 @@
 (maybe-require-package 'scratch)
 (require-package 'command-log-mode)
 
+(require 'init-evil)
 (require 'init-frame-hooks)
 (require 'init-xterm)
+(require 'init-modeline)
 (require 'init-themes)
 (require 'init-osx-keys)
 (require 'init-gui-frames)
@@ -74,16 +76,19 @@
 (require 'init-flymake)
 (require 'init-eglot)
 
+(require 'init-transient)
 (require 'init-recentf)
-(require 'init-minibuffer)
 (require 'init-hippie-expand)
 (require 'init-corfu)
+(require 'init-minibuffer)
 (require 'init-windows)
 (require 'init-sessions)
 (require 'init-mmm)
 
+(require 'init-undo)
 (require 'init-editing-utils)
 (require 'init-whitespace)
+(require 'init-translate)
 
 (require 'init-vc)
 (require 'init-darcs)
@@ -91,6 +96,8 @@
 (require 'init-github)
 
 (require 'init-projectile)
+
+(require 'init-ime)
 
 (require 'init-compile)
 (require 'init-crontab)
@@ -140,6 +147,7 @@
   (require 'init-spelling))
 
 (require 'init-misc)
+(require 'init-ai)
 
 (require 'init-folding)
 (require 'init-dash)
